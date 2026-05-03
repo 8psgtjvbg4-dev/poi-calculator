@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oposición Probability Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #ffffff; color: #1a1a1a; padding: 2rem 1.5rem; max-width: 680px; margin: 0 auto; }
+  h1 { font-size: 18px; font-weight: 500; margin-bottom: 6px; }
+  .subtitle { font-size: 13px; color: #666; margin-bottom: 1.5rem; line-height: 1.5; }
+  .section { margin-bottom: 1.25rem; }
+  label { font-size: 13px; color: #666; display: block; margin-bottom: 8px; }
+  .draw-buttons { display: flex; gap: 8px; }
+  .draw-btn { flex: 1; padding: 8px; font-size: 14px; font-weight: 500; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+  .draw-btn.active { border: 2px solid #1D9E75; background: #E1F5EE; color: #085041; }
+  .draw-btn.inactive { border: 1px solid #ddd; background: #fff; color: #666; }
+  .slider-row { display: flex; align-items: center; gap: 12px; }
+  input[type=range] { flex: 1; accent-color: #1D9E75; }
+  input[type=number] { width: 64px; text-align: center; font-size: 15px; font-weight: 500; border: 1px solid #ddd; border-radius: 8px; padding: 6px; }
+  .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+  .metric { background: #f5f5f3; border-radius: 8px; padding: 1rem; }
+  .metric-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .metric-value { font-size: 26px; font-weight: 500; }
+  .bar-header { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 6px; }
+  .bar-track { height: 10px; background: #f0f0ee; border-radius: 6px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 6px; transition: width 0.2s, background 0.2s; }
+  .message-box { border-radius: 8px; padding: 1rem 1.25rem; border-left: 3px solid #1D9E75; background: #f5f5f3; }
+  .message-box p { font-size: 13px; color: #555; line-height: 1.6; }
+  .compare-box { background: #f5f5f3; border-radius: 8px; padding: 1rem 1.25rem; }
+  .compare-title { font-size: 12px; font-weight: 500; margin-bottom: 8px; }
+  .compare-row { display: flex; gap: 12px; }
+  .compare-col { flex: 1; }
+  .compare-col-label { font-size: 11px; color: #888; margin-bottom: 2px; }
+  .compare-col-value { font-size: 18px; font-weight: 500; }
+  .green { color: #1D9E75; }
+  .footnote { font-size: 12px; color: #aaa; line-height: 1.6; border-top: 1px solid #eee; padding-top: 1rem; }
+</style>
+</head>
+<body>
+
+<h1>Probability calculator</h1>
+<p class="subtitle">How likely are you to draw at least one unit you have prepared? Adjust the number of units studied and the number of draws by the panel.</p>
+
+<div class="section">
+  <label>Number of draws by the panel</label>
+  <div class="draw-buttons">
+    <button class="draw-btn active" id="btn4" onclick="setDraws(4)">4 draws</button>
+    <button class="draw-btn inactive" id="btn5" onclick="setDraws(5)">5 draws</button>
+  </div>
+</div>
+
+<div class="section">
+  <label>How many units have you prepared?</label>
+  <div class="slider-row">
+    <input type="range" min="1" max="68" value="25" id="units-slider" step="1" />
+    <input type="number" min="1" max="68" value="25" id="units-input" />
+  </div>
+</div>
+
+<div class="section metrics">
+  <div class="metric">
+    <div class="metric-label">Probability</div>
+    <div class="metric-value" id="probability">—</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Roughly</div>
+    <div class="metric-value" id="ratio">—</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Units remaining</div>
+    <div class="metric-value" id="remaining">—</div>
+  </div>
+  <div class="metric">
+    <div class="metric-label">Panel draws</div>
+    <div class="metric-value" id="draws-display">4</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="bar-header">
+    <span>0%</span>
+    <span id="bar-label" style="font-weight:500;color:#1a1a1a;">—</span>
+    <span>100%</span>
+  </div>
+  <div class="bar-track">
+    <div class="bar-fill" id="progress-bar" style="width:0%;background:#1D9E75;"></div>
+  </div>
+</div>
+
+<div class="section message-box" id="message-box">
+  <p id="message"></p>
+</div>
+
+<div class="section compare-box">
+  <div class="compare-title">Compare: 4 draws vs 5 draws with <span id="compare-n">25</span> units prepared</div>
+  <div class="compare-row">
+    <div class="compare-col">
+      <div class="compare-col-label">4 draws</div>
+      <div class="compare-col-value" id="prob4">—</div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-col-label">5 draws</div>
+      <div class="compare-col-value" id="prob5">—</div>
+    </div>
+    <div class="compare-col">
+      <div class="compare-col-label">Difference</div>
+      <div class="compare-col-value green" id="prob-diff">—</div>
+    </div>
+  </div>
+</div>
+
+<p class="footnote">Probability = 1 − (chance all draws are unknown). Calculated using hypergeometric distribution across 68 units. Depth of preparation is not reflected — a deeply prepared unit is worth more than a superficially covered one.</p>
+
+<script>
+let currentDraws = 4;
+
+function comb(n, k) {
+  if (k > n || k < 0) return 0;
+  if (k === 0 || k === n) return 1;
+  let result = 1;
+  for (let i = 0; i < k; i++) { result *= (n - i); result /= (i + 1); }
+  return result;
+}
+
+function calcProb(prepared, draws) {
+  const unknown = 68 - prepared;
+  if (unknown < draws) return 100;
+  return (1 - comb(unknown, draws) / comb(68, draws)) * 100;
+}
+
+function getColor(p) {
+  if (p >= 70) return '#1D9E75';
+  if (p >= 45) return '#EF9F27';
+  return '#D85A30';
+}
+
+function getRatio(p) {
+  if (p >= 97) return 'Almost certain';
+  if (p >= 90) return '9 in 10';
+  if (p >= 83) return '5 in 6';
+  if (p >= 75) return '3 in 4';
+  if (p >= 65) return '2 in 3';
+  if (p >= 58) return '3 in 5';
+  if (p >= 50) return '1 in 2';
+  if (p >= 42) return '2 in 5';
+  if (p >= 33) return '1 in 3';
+  if (p >= 25) return '1 in 4';
+  if (p >= 18) return '1 in 5';
+  return 'Less than 1 in 6';
+}
+
+function getMessage(n, p, draws) {
+  const pct = p.toFixed(1);
+  if (n <= 10) return 'With only ' + n + ' unit' + (n===1?'':'s') + ' prepared and ' + draws + ' draws, you have a ' + pct + '% chance. Even with multiple draws, the gaps are very wide. Focus on reaching at least 20 units before thinking about strategy.';
+  if (n <= 20) return 'With ' + n + ' units and ' + draws + ' draws, your probability is ' + pct + '%. The multiple draws help considerably, but luck still dominates. Every unit you add from here shifts the odds meaningfully.';
+  if (n <= 35) return 'With ' + n + ' units and ' + draws + ' draws, you have a ' + pct + '% chance — roughly ' + getRatio(p) + '. The multiple draws give you a real fighting chance. Depth matters as much as breadth at this stage.';
+  if (n <= 50) return 'With ' + n + ' units and ' + draws + ' draws, your probability is ' + pct + '%. You are in a strong position. Bad luck is possible but no longer likely to be catastrophic.';
+  if (n <= 60) return 'With ' + n + ' units prepared, you have a ' + pct + '% chance across ' + draws + ' draws. Focus your remaining energy on revision and exam technique rather than new units.';
+  return 'With ' + n + ' units and ' + draws + ' draws, you have a ' + pct + '% chance. You are extremely well prepared. Your result will be determined by the quality of your answer, not by chance.';
+}
+
+function setDraws(n) {
+  currentDraws = n;
+  ['4','5'].forEach(function(d) {
+    const btn = document.getElementById('btn' + d);
+    if (parseInt(d) === n) { btn.className = 'draw-btn active'; }
+    else { btn.className = 'draw-btn inactive'; }
+  });
+  update(document.getElementById('units-slider').value);
+}
+
+function update(val) {
+  const n = Math.min(68, Math.max(1, parseInt(val) || 1));
+  document.getElementById('units-slider').value = n;
+  document.getElementById('units-input').value = n;
+  const p = calcProb(n, currentDraws);
+  const p4 = calcProb(n, 4);
+  const p5 = calcProb(n, 5);
+  const color = getColor(p);
+  document.getElementById('probability').textContent = p.toFixed(1) + '%';
+  document.getElementById('ratio').textContent = getRatio(p);
+  document.getElementById('remaining').textContent = 68 - n;
+  document.getElementById('draws-display').textContent = currentDraws;
+  document.getElementById('progress-bar').style.width = p.toFixed(1) + '%';
+  document.getElementById('progress-bar').style.background = color;
+  document.getElementById('bar-label').textContent = p.toFixed(1) + '%';
+  document.getElementById('message').textContent = getMessage(n, p, currentDraws);
+  document.getElementById('message-box').style.borderLeftColor = color;
+  document.getElementById('compare-n').textContent = n;
+  document.getElementById('prob4').textContent = p4.toFixed(1) + '%';
+  document.getElementById('prob5').textContent = p5.toFixed(1) + '%';
+  document.getElementById('prob-diff').textContent = '+' + (p5 - p4).toFixed(1) + '%';
+}
+
+document.getElementById('units-slider').addEventListener('input', function() { update(this.value); });
+document.getElementById('units-input').addEventListener('input', function() { update(this.value); });
+document.getElementById('units-input').addEventListener('blur', function() { update(this.value); });
+
+update(25);
+</script>
+</body>
+</html>
